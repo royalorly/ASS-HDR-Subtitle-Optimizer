@@ -408,6 +408,75 @@ LoadHDRPreset(*)
 }
 
 
+ConvertSRT(file, size, outline, shadow, color, alpha, prefix := "", template := "", mode := "")
+{
+    content := FileRead(file, "UTF-8")
+    lines := StrSplit(content, "`n")
+
+    assBody := ""
+
+    i := 1
+    while (i <= lines.Length)
+    {
+        line := Trim(lines[i])
+
+        ; 跳过编号
+        if RegExMatch(line, "^\d+$")
+        {
+            i++
+            continue
+        }
+
+        ; 时间轴
+        if RegExMatch(line, "(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})", &m)
+        {
+            start := StrReplace(m[1], ",", ".")
+            end   := StrReplace(m[2], ",", ".")
+
+            i++
+            text := ""
+
+            ; 收集字幕（直到空行）
+            while (i <= lines.Length && Trim(lines[i]) != "")
+            {
+                t := Trim(lines[i])
+                text .= t "\N"
+                i++
+            }
+
+            text := RTrim(text, "\N")
+
+            assBody .= "Dialogue: 0," start "," end ",Default,,0,0,0,," text "`n"
+        }
+
+        i++
+    }
+
+    ; =========================
+    ; 输出路径（复用你的命名逻辑）
+    ; =========================
+    outFile := StrReplace(file, ".srt", ".ass")
+
+    ; =========================
+    ; HDR ASS Header（对齐 ConvertOne）
+    ; =========================
+    header :=
+    (
+    "[Script Info]`n"
+    "ScriptType: v4.00+`n`n"
+    "[V4+ Styles]`n"
+    "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding`n"
+    "Style: Default,Arial," size ",&H00FFFFFF,&H0000FFFF,&H00000000,&H64000000,0,0,0,0,100,100,0,0,1," outline "," shadow ",2,10,10,10,1`n`n"
+    "[Events]`n"
+    "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`n"
+    )
+
+    FileDelete(outFile)
+    FileAppend(header assBody, outFile, "UTF-8")
+
+    return outFile
+}
+
 
 ResetValue(*)
 {
