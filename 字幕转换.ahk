@@ -118,21 +118,13 @@ GuiDropFiles(GuiObj, GuiCtrl, Files, X, Y)
 
 Convert(*)
 {
-    global EditAlpha
     global DropFiles
-global Main
-    global EditSize
-    global EditOutline
-    global EditShadow
-    global EditColor
-    global EditPrefix
-    global EditTemplate
-    global ModePrefix
-global ModeTemplate
+    global EditSize, EditOutline, EditShadow, EditColor, EditAlpha
+    global EditPrefix, EditTemplate, ModeTemplate
 
-    if (DropFiles.Length = 0)
+    if (!IsSet(DropFiles) || DropFiles.Length = 0)
     {
-        MsgBox("没有找到ASS字幕")
+        MsgBox("没有找到ASS或SRT字幕")
         return
     }
 
@@ -143,65 +135,41 @@ global ModeTemplate
     {
         try
         {
-            for file in DropFiles
-{
-    SplitPath(file, , , &ext)
-    ext := StrLower(ext)
+            SplitPath(file, , , &ext)
+            ext := StrLower(ext)
 
-    if (ext = "srt")
-    {
-        ConvertSRT(file,
-            Integer(EditSize.Value),
-            Integer(EditOutline.Value),
-            Integer(EditShadow.Value),
-            Trim(EditColor.Value),
-            Trim(EditAlpha.Value)
-        )
-    }
-    else
-    {
-        SplitPath(file, , , &ext)
-ext := StrLower(ext)
+            ; =========================
+            ; SRT 转换入口
+            ; =========================
+            if (ext = "srt")
+            {
+                ConvertSRT(
+                    file,
+                    Integer(EditSize.Value),
+                    Integer(EditOutline.Value),
+                    Integer(EditShadow.Value),
+                    Trim(EditColor.Value),
+                    Trim(EditAlpha.Value),
+                    NormalizePrefix(EditPrefix.Value),
+                    Trim(EditTemplate.Value),
+                    ModeTemplate.Value
+                )
+            }
+            else
+            {
+                ConvertOne(
+                    file,
+                    Integer(EditSize.Value),
+                    Integer(EditOutline.Value),
+                    Integer(EditShadow.Value),
+                    Trim(EditColor.Value),
+                    Trim(EditAlpha.Value),
+                    NormalizePrefix(EditPrefix.Value),
+                    Trim(EditTemplate.Value),
+                    ModeTemplate.Value
+                )
+            }
 
-if (ext = "srt")
-{
-    ConvertSRT(
-        file,
-        Integer(EditSize.Value),
-        Integer(EditOutline.Value),
-        Integer(EditShadow.Value),
-        Trim(EditColor.Value),
-        Trim(EditAlpha.Value),
-        NormalizePrefix(EditPrefix.Value),
-        Trim(EditTemplate.Value),
-        ModeTemplate.Value
-    )
-}
-else
-{
-    ConvertOne(
-        file,
-        Integer(EditSize.Value),
-        Integer(EditOutline.Value),
-        Integer(EditShadow.Value),
-        Trim(EditColor.Value),
-        Trim(EditAlpha.Value),
-        NormalizePrefix(EditPrefix.Value),
-        Trim(EditTemplate.Value),
-        ModeTemplate.Value
-    )
-}
-    }
-}
-    Integer(EditSize.Value),
-    Integer(EditOutline.Value),
-    Integer(EditShadow.Value),
-    Trim(EditColor.Value),
-    Trim(EditAlpha.Value),
-    NormalizePrefix(EditPrefix.Value),
-    Trim(EditTemplate.Value),
-    ModeTemplate.Value
-)
             ok++
         }
         catch Error as e
@@ -209,14 +177,19 @@ else
             fail++
         }
     }
-Main["DropBox"].Value :=
-(
-"✅ 转换完成！`r`n`r`n"
-"共输出 " DropFiles.Length " 个字幕文件"
-)
-    MsgBox(
-        "完成！`n`n成功：" ok "`n失败：" fail
+
+    ; =========================
+    ; UI输出
+    ; =========================
+    Main["DropBox"].Value :=
+    (
+        "✅ 转换完成！`r`n`r`n"
+        "共处理 " DropFiles.Length " 个字幕文件`r`n"
+        "成功：" ok "`r`n"
+        "失败：" fail
     )
+
+    MsgBox("完成！`n`n成功：" ok "`n失败：" fail)
 }
 
 
