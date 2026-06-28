@@ -143,8 +143,32 @@ global ModeTemplate
     {
         try
         {
-            ConvertOne(
-    file,
+            for file in DropFiles
+{
+    SplitPath(file, , , &ext)
+    ext := StrLower(ext)
+
+    if (ext = "srt")
+    {
+        ConvertSRT(file,
+            Integer(EditSize.Value),
+            Integer(EditOutline.Value),
+            Integer(EditShadow.Value),
+            Trim(EditColor.Value),
+            Trim(EditAlpha.Value)
+        )
+    }
+    else
+    {
+        ConvertOne(file,
+            Integer(EditSize.Value),
+            Integer(EditOutline.Value),
+            Integer(EditShadow.Value),
+            Trim(EditColor.Value),
+            Trim(EditAlpha.Value)
+        )
+    }
+}
     Integer(EditSize.Value),
     Integer(EditOutline.Value),
     Integer(EditShadow.Value),
