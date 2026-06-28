@@ -81,43 +81,40 @@ GuiDropFiles(GuiObj, GuiCtrl, Files, X, Y)
 
     DropFiles := []
 
-FolderCount := 0
-txt := ""
+    FolderCount := 0
 
     for item in Files
     {
         if DirExist(item)
         {
             FolderCount++
+
             Loop Files item "\*.ass", "R"
-            {
                 DropFiles.Push(A_LoopFileFullPath)
-                txt .= A_LoopFileFullPath "`r`n"
-            }
+
+            Loop Files item "\*.srt", "R"
+                DropFiles.Push(A_LoopFileFullPath)
         }
         else
         {
             SplitPath(item, , , &ext)
 
-            if (StrLower(ext)="ass")
-            {
+            ext := StrLower(ext)
+
+            if (ext="ass" || ext="srt")
                 DropFiles.Push(item)
-                txt .= item "`r`n"
-            }
         }
     }
 
-    msg := "✅ 已加载 " DropFiles.Length " 个字幕文件"
+    msg := "📂 已加载 " DropFiles.Length " 个字幕文件"
 
-if (FolderCount)
-    msg .= "`r`n`r`n📁 来自 " FolderCount " 个文件夹"
+    if FolderCount
+        msg .= "`r`n`r`n来自 " FolderCount " 个文件夹"
 
-msg .= "`r`n`r`n点击【开始转换】即可"
+    msg .= "`r`n`r`n点击【开始转换】"
 
-GuiObj["DropBox"].Value := msg
-
+    GuiObj["DropBox"].Value := msg
 }
-
 
 Convert(*)
 {
