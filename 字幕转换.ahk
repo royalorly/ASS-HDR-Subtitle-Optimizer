@@ -160,13 +160,37 @@ global ModeTemplate
     }
     else
     {
-        ConvertOne(file,
-            Integer(EditSize.Value),
-            Integer(EditOutline.Value),
-            Integer(EditShadow.Value),
-            Trim(EditColor.Value),
-            Trim(EditAlpha.Value)
-        )
+        SplitPath(file, , , &ext)
+ext := StrLower(ext)
+
+if (ext = "srt")
+{
+    ConvertSRT(
+        file,
+        Integer(EditSize.Value),
+        Integer(EditOutline.Value),
+        Integer(EditShadow.Value),
+        Trim(EditColor.Value),
+        Trim(EditAlpha.Value),
+        NormalizePrefix(EditPrefix.Value),
+        Trim(EditTemplate.Value),
+        ModeTemplate.Value
+    )
+}
+else
+{
+    ConvertOne(
+        file,
+        Integer(EditSize.Value),
+        Integer(EditOutline.Value),
+        Integer(EditShadow.Value),
+        Trim(EditColor.Value),
+        Trim(EditAlpha.Value),
+        NormalizePrefix(EditPrefix.Value),
+        Trim(EditTemplate.Value),
+        ModeTemplate.Value
+    )
+}
     }
 }
     Integer(EditSize.Value),
