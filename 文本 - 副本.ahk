@@ -72,16 +72,22 @@ GuiDropFiles(GuiObj, GuiCtrl, Files, X, Y)
         if DirExist(item)
         {
             Loop Files item "\*.ass", "R"
-            {
-                DropFiles.Push(A_LoopFileFullPath)
-                txt .= A_LoopFileFullPath "`r`n"
-            }
+{
+    DropFiles.Push(A_LoopFileFullPath)
+    txt .= A_LoopFileFullPath "`r`n"
+}
+
+Loop Files item "\*.srt", "R"
+{
+    DropFiles.Push(A_LoopFileFullPath)
+    txt .= A_LoopFileFullPath "`r`n"
+}
         }
         else
         {
             SplitPath(item, , , &ext)
 
-            if (StrLower(ext)="ass")
+           if (StrLower(ext)="ass" || StrLower(ext)="srt")
             {
                 DropFiles.Push(item)
                 txt .= item "`r`n"
