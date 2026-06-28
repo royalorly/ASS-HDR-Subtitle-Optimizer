@@ -121,27 +121,35 @@ Convert(*)
     fail := 0
 
     for file in DropFiles
+{
+    SplitPath(file,,, &ext)
+
+    if (StrLower(ext)="srt")
     {
-        try
-        {
-            ConvertOne(
-    file,
-    Integer(EditSize.Value),
-    Integer(EditOutline.Value),
-    Integer(EditShadow.Value),
-    Trim(EditColor.Value),
-    Trim(EditAlpha.Value),
-    NormalizePrefix(EditPrefix.Value),
-    Trim(EditTemplate.Value),
-    ChkTemplate.Value
-)
-            ok++
-        }
-        catch Error as e
-        {
-            fail++
-        }
+        ConvertSRT(
+            file,
+            Integer(EditSize.Value),
+            Integer(EditOutline.Value),
+            Integer(EditShadow.Value),
+            Trim(EditColor.Value),
+            Trim(EditAlpha.Value)
+        )
     }
+    else
+    {
+        ConvertOne(
+            file,
+            Integer(EditSize.Value),
+            Integer(EditOutline.Value),
+            Integer(EditShadow.Value),
+            Trim(EditColor.Value),
+            Trim(EditAlpha.Value),
+            NormalizePrefix(EditPrefix.Value),
+            Trim(EditTemplate.Value),
+            ModeTemplate.Value
+        )
+    }
+}
 
     MsgBox(
         "完成！`n`n成功：" ok "`n失败：" fail
