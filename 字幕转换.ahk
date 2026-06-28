@@ -1,6 +1,5 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
-#Include ConvertSRT.ahk
 
 global DropFiles := []
 global FontSize := 20
@@ -88,31 +87,25 @@ txt := ""
     for item in Files
     {
         if DirExist(item)
-{
-    FolderCount++
+        {
+            FolderCount++
+            Loop Files item "\*.ass", "R"
+            {
+                DropFiles.Push(A_LoopFileFullPath)
+                txt .= A_LoopFileFullPath "`r`n"
+            }
+        }
+        else
+        {
+            SplitPath(item, , , &ext)
 
-    Loop Files item "\*.ass", "R"
-    {
-        DropFiles.Push(A_LoopFileFullPath)
-        txt .= A_LoopFileFullPath "`r`n"
+            if (StrLower(ext)="ass")
+            {
+                DropFiles.Push(item)
+                txt .= item "`r`n"
+            }
+        }
     }
-
-    Loop Files item "\*.srt", "R"
-    {
-        DropFiles.Push(A_LoopFileFullPath)
-        txt .= A_LoopFileFullPath "`r`n"
-    }
-}
-else
-{
-    SplitPath(item, , , &ext)
-
-    if (StrLower(ext)="ass" || StrLower(ext)="srt")
-    {
-        DropFiles.Push(item)
-        txt .= item "`r`n"
-    }
-}
 
     msg := "✅ 已加载 " DropFiles.Length " 个字幕文件"
 
