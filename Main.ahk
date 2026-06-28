@@ -88,31 +88,31 @@ txt := ""
     for item in Files
     {
         if DirExist(item)
-        {
-            FolderCount++
-            Loop Files item "\*.ass", "R"
 {
-    DropFiles.Push(A_LoopFileFullPath)
-    txt .= A_LoopFileFullPath "`r`n"
-}
+    FolderCount++
 
-Loop Files item "\*.srt", "R"
-{
-    DropFiles.Push(A_LoopFileFullPath)
-    txt .= A_LoopFileFullPath "`r`n"
-}
-        else
-        {
-            SplitPath(item, , , &ext)
-
-            if (StrLower(ext)="ass" || StrLower(ext)="srt")
-
-            {
-                DropFiles.Push(item)
-                txt .= item "`r`n"
-            }
-        }
+    Loop Files item "\*.ass", "R"
+    {
+        DropFiles.Push(A_LoopFileFullPath)
+        txt .= A_LoopFileFullPath "`r`n"
     }
+
+    Loop Files item "\*.srt", "R"
+    {
+        DropFiles.Push(A_LoopFileFullPath)
+        txt .= A_LoopFileFullPath "`r`n"
+    }
+}
+else
+{
+    SplitPath(item, , , &ext)
+
+    if (StrLower(ext)="ass" || StrLower(ext)="srt")
+    {
+        DropFiles.Push(item)
+        txt .= item "`r`n"
+    }
+}
 
     msg := "✅ 已加载 " DropFiles.Length " 个字幕文件"
 
