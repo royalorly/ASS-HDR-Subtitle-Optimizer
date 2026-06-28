@@ -1,5 +1,6 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
+#Include ConvertSRT.ahk
 
 global DropFiles := []
 global FontSize := 20
@@ -8,15 +9,22 @@ global Shadow := 0
 global Color := "D8D8D8"
 global Alpha := "50"
 
-Main := Gui("+Resize","LG HDR Subtitle Optimizer v2.0")
+Main := Gui(,"ASS HDR 字幕优化工具 Roylor")
 Main.BackColor := "202020"
 Main.SetFont("s10","Microsoft YaHei")
 
 Main.AddText("x20 y20 w520 Center cFFFFFF"
 ,"请把 ASS 字幕拖到下面区域")
 
-Drop := Main.AddEdit("x20 y50 w520 h140 ReadOnly -Wrap vDropBox")
+Drop := Main.AddEdit("x20 y50 w520 h120 ReadOnly Center -VScroll vDropBox")
 Drop.Opt("+Background303030 cFFFFFF")
+
+Drop.Value :=
+(
+"📂 请拖拽 ASS 字幕文件或文件夹到这里`r`n`r`n"
+"支持批量拖拽、自动识别子文件夹`r`n`r`n"
+"等待加载..."
+)
 
 Main.AddText("x20 y205 cFFFFFF","字号")
 EditSize := Main.AddEdit("x70 y200 w60",FontSize)
@@ -39,12 +47,16 @@ EditPrefix := Main.AddEdit("x220 y230 w320","")
 Main.AddText("x20 y265 cFFFFFF","命名模板")
 EditTemplate := Main.AddEdit("x90 y260 w450","")
 
-ChkTemplate := Main.AddCheckbox("x20 y290","使用命名模板（忽略则输出前缀+E剧集）")
+Main.AddText("x20 y290 cFFFFFF","命名方式")
+
+ModePrefix := Main.AddRadio("x20 y315 Checked cFFFFFF","输出前缀")
+ModeTemplate := Main.AddRadio("x170 y315 cFFFFFF","命名模板")
 
 
-Preset := Main.AddButton("x40 y325 w120 h35","HDR预设")
-Btn := Main.AddButton("x180 y325 w180 h35","开始转换")
-Reset := Main.AddButton("x390 y325 w120 h35","恢复默认")
+
+Preset := Main.AddButton("x40 y350 w120 h35","HDR预设")
+Btn := Main.AddButton("x180 y350 w180 h35","开始转换")
+Reset := Main.AddButton("x390 y350 w120 h35","恢复默认")
 
 Preset.OnEvent("Click",LoadHDRPreset)
 Btn.OnEvent("Click",Convert)
@@ -52,8 +64,13 @@ Reset.OnEvent("Click",ResetValue)
 
 Main.OnEvent("DropFiles",GuiDropFiles)
 Main.OnEvent("Close",(*)=>ExitApp())
-
-Main.Show("w560 h400")
+SetCueBanner(EditPrefix.Hwnd, "例：遮天S01 生成结果为：遮天S01E*")
+SetCueBanner(EditTemplate.Hwnd, "例：斗破苍穹2015第十一版第一季第一集  或 遮天S01E01  或  第01集")
+Main.AddText(
+"x20 y410 w520 Center c808080",
+"Version 2.0.0    © Royalor    版权所有 盗版必究"
+)
+Main.Show("w560 h480")
 
 return
 
@@ -65,12 +82,14 @@ GuiDropFiles(GuiObj, GuiCtrl, Files, X, Y)
 
     DropFiles := []
 
-    txt := ""
+FolderCount := 0
+txt := ""
 
     for item in Files
     {
         if DirExist(item)
         {
+            FolderCount++
             Loop Files item "\*.ass", "R"
 {
     DropFiles.Push(A_LoopFileFullPath)
@@ -82,12 +101,12 @@ Loop Files item "\*.srt", "R"
     DropFiles.Push(A_LoopFileFullPath)
     txt .= A_LoopFileFullPath "`r`n"
 }
-        }
         else
         {
             SplitPath(item, , , &ext)
 
-           if (StrLower(ext)="ass" || StrLower(ext)="srt")
+            if (StrLower(ext)="ass" || StrLower(ext)="srt")
+
             {
                 DropFiles.Push(item)
                 txt .= item "`r`n"
@@ -95,7 +114,15 @@ Loop Files item "\*.srt", "R"
         }
     }
 
-    GuiObj["DropBox"].Value := txt
+    msg := "✅ 已加载 " DropFiles.Length " 个字幕文件"
+
+if (FolderCount)
+    msg .= "`r`n`r`n📁 来自 " FolderCount " 个文件夹"
+
+msg .= "`r`n`r`n点击【开始转换】即可"
+
+GuiObj["DropBox"].Value := msg
+
 }
 
 
@@ -103,13 +130,15 @@ Convert(*)
 {
     global EditAlpha
     global DropFiles
+global Main
     global EditSize
     global EditOutline
     global EditShadow
     global EditColor
     global EditPrefix
     global EditTemplate
-    global ChkTemplate
+    global ModePrefix
+global ModeTemplate
 
     if (DropFiles.Length = 0)
     {
@@ -121,36 +150,32 @@ Convert(*)
     fail := 0
 
     for file in DropFiles
-{
-    SplitPath(file,,, &ext)
-
-    if (StrLower(ext)="srt")
     {
-        ConvertSRT(
-            file,
-            Integer(EditSize.Value),
-            Integer(EditOutline.Value),
-            Integer(EditShadow.Value),
-            Trim(EditColor.Value),
-            Trim(EditAlpha.Value)
-        )
+        try
+        {
+            ConvertOne(
+    file,
+    Integer(EditSize.Value),
+    Integer(EditOutline.Value),
+    Integer(EditShadow.Value),
+    Trim(EditColor.Value),
+    Trim(EditAlpha.Value),
+    NormalizePrefix(EditPrefix.Value),
+    Trim(EditTemplate.Value),
+    ModeTemplate.Value
+)
+            ok++
+        }
+        catch Error as e
+        {
+            fail++
+        }
     }
-    else
-    {
-        ConvertOne(
-            file,
-            Integer(EditSize.Value),
-            Integer(EditOutline.Value),
-            Integer(EditShadow.Value),
-            Trim(EditColor.Value),
-            Trim(EditAlpha.Value),
-            NormalizePrefix(EditPrefix.Value),
-            Trim(EditTemplate.Value),
-            ModeTemplate.Value
-        )
-    }
-}
-
+Main["DropBox"].Value :=
+(
+"✅ 转换完成！`r`n`r`n"
+"共输出 " DropFiles.Length " 个字幕文件"
+)
     MsgBox(
         "完成！`n`n成功：" ok "`n失败：" fail
     )
@@ -557,4 +582,22 @@ NumberToChinese(num)
     }
 
     return num
+}
+
+
+SetCueBanner(hWnd, Text)
+{
+    static EM_SETCUEBANNER := 0x1501
+
+    BufferText := Buffer((StrLen(Text) + 1) * 2, 0)
+    StrPut(Text, BufferText, "UTF-16")
+
+    DllCall(
+        "SendMessageW",
+        "Ptr", hWnd,
+        "UInt", EM_SETCUEBANNER,
+        "Ptr", True,
+        "Ptr", BufferText,
+        "Ptr"
+    )
 }
